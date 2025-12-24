@@ -174,3 +174,33 @@ func Register(c *gin.Context) {
 		User:  user.Name,
 	})
 }
+
+// CheckEmail godoc
+// @Summary      Check Email Existence
+// @Description  Check if an email is already registered
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        request body models.CheckEmailRequest true "Email to check"
+// @Success      200  {object}  map[string]bool
+// @Failure      400  {object}  map[string]string "Bad Request"
+// @Failure      500  {object}  map[string]string "Internal Server Error"
+// @Router       /auth/check-email [post]
+func CheckEmail(c *gin.Context) {
+	var req models.CheckEmailRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	userKey := fmt.Sprintf("user:%s", req.Email)
+	exists, err := database.Rdb.Exists(c, userKey).Result()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"exists": exists > 0,
+	})
+}

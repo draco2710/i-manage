@@ -20,13 +20,6 @@ const LoginScreen = () => {
             <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-[radial-gradient(circle,rgba(37,99,235,0.15)_0%,rgba(255,255,255,0)_70%)] rounded-full pointer-events-none mix-blend-multiply filter blur-3xl z-0"></div>
             <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(6,182,212,0.15)_0%,rgba(255,255,255,0)_70%)] rounded-full pointer-events-none mix-blend-multiply filter blur-3xl z-0"></div>
 
-            {/* Header */}
-            <div className="flex items-center p-4 justify-between absolute top-0 left-0 w-full z-10">
-                <button className="text-slate-700 flex size-12 shrink-0 items-center justify-center rounded-full hover:bg-slate-100 transition-colors">
-                    <span className="material-symbols-outlined">arrow_back</span>
-                </button>
-            </div>
-
             <div className="flex flex-col flex-1 justify-center px-6 py-10 max-w-md mx-auto w-full z-10">
                 {/* Logo & Welcome */}
                 <div className="flex flex-col items-center mb-8 relative">
@@ -119,7 +112,7 @@ const LoginScreen = () => {
                 <div className="mt-auto pt-8 text-center">
                     <p className="text-slate-500 text-sm">
                         Chưa có tài khoản?
-                        <Link href="#" className="text-primary font-bold hover:underline ml-1">Đăng ký ngay</Link>
+                        <Link href="/register" className="text-primary font-bold hover:underline ml-1">Đăng ký ngay</Link>
                     </p>
                 </div>
             </div>

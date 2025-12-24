@@ -13,16 +13,26 @@ var Rdb *redis.Client
 func InitRedis() {
 	redisAddr := os.Getenv("REDIS_ADDR")
 	if redisAddr == "" {
-		redisAddr = "localhost:6379"
+		redisAddr = "redis-10120.crce194.ap-seast-1-1.ec2.cloud.redislabs.com:10120"
+	}
+
+	redisUsername := os.Getenv("REDIS_USERNAME")
+	if redisUsername == "" {
+		redisUsername = "default"
 	}
 
 	redisPassword := os.Getenv("REDIS_PASSWORD")
+	if redisPassword == "" {
+		redisPassword = "zuBy0yjIu6xaiNuoAjTHevwzlK5gWs4y"
+	}
 	
 	Rdb = redis.NewClient(&redis.Options{
 		Addr:     redisAddr,
-		Password: redisPassword, // no password set
+		Username: redisUsername,
+		Password: redisPassword,
 		DB:       0,  // use default DB
 	})
+
 
 	ctx := context.Background()
 	_, err := Rdb.Ping(ctx).Result()
