@@ -3,9 +3,9 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o main
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main
 
-FROM --platform=linux/arm64 alpine:3.19
+FROM --platform=linux/amd64 alpine:3.19
 WORKDIR /root
 COPY --from=builder /app/main .
 EXPOSE 8080
