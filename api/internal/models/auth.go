@@ -11,6 +11,10 @@ type RegisterRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 }
 
+type CheckEmailRequest struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
 type AuthResponse struct {
 	Token string `json:"token"`
 	User  string `json:"user"`

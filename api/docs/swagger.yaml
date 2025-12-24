@@ -7,6 +7,13 @@ definitions:
       user:
         type: string
     type: object
+  models.CheckEmailRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
   models.ICard:
     properties:
       cardType:
@@ -75,6 +82,42 @@ info:
   title: i-Manage API
   version: "1.0"
 paths:
+  /auth/check-email:
+    post:
+      consumes:
+      - application/json
+      description: Check if an email is already registered
+      parameters:
+      - description: Email to check
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CheckEmailRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Check Email Existence
+      tags:
+      - auth
   /auth/login:
     post:
       consumes:

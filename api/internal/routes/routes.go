@@ -25,6 +25,7 @@ func SetupRouter() *gin.Engine {
 		{
 			auth.POST("/login", handlers.Login)
 			auth.POST("/register", handlers.Register)
+			auth.POST("/check-email", handlers.CheckEmail)
 		}
 		
 		search := api.Group("/search")
