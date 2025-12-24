@@ -12,29 +12,21 @@ interface SearchResult {
     packageId?: string;
 }
 
-function buildFilter(searchType: SearchType, searchQuery: string) {
+function buildFilter(searchType: SearchType, searchQuery: string, skip?: number, limit?: number, fields?: any) {
     const searchPattern = `%${searchQuery}%`;
+    let filter: any = {};
 
     if (searchType === 'all') {
-        return {
+        filter = {
             where: {
                 or: [
                     { id: { like: searchPattern } },
                     { ownerName: { ilike: searchPattern } }
                 ]
-            },
-            fields: {
-                id: true,
-                ownerName: true,
-                private: true,
-                cardType: true,
-                packageId: true
             }
         };
-    }
-
-    if (searchType === 'ishop') {
-        return {
+    } else if (searchType === 'ishop') {
+        filter = {
             where: {
                 and: [
                     { cardType: "CARD_TYPE.ISHOP" },
@@ -45,35 +37,42 @@ function buildFilter(searchType: SearchType, searchQuery: string) {
                         ]
                     }
                 ]
-            },
-            fields: {
-                id: true,
-                ownerName: true,
-                private: true
+            }
+        };
+    } else {
+        // icard
+        filter = {
+            where: {
+                and: [
+                    { cardType: { neq: "CARD_TYPE.ISHOP" } },
+                    {
+                        or: [
+                            { id: { like: searchPattern } },
+                            { ownerName: { ilike: searchPattern } }
+                        ]
+                    }
+                ]
             }
         };
     }
 
-    // icard
-    return {
-        where: {
-            and: [
-                { cardType: { neq: "CARD_TYPE.ISHOP" } },
-                {
-                    or: [
-                        { id: { like: searchPattern } },
-                        { ownerName: { ilike: searchPattern } }
-                    ]
-                }
-            ]
-        },
-        fields: {
+    // Default fields if not specified
+    if (fields) {
+        filter.fields = fields;
+    } else {
+        filter.fields = {
             id: true,
             ownerName: true,
             private: true,
-            cardType: true
-        }
-    };
+            cardType: true,
+            packageId: searchType === 'all' ? true : undefined
+        };
+    }
+
+    if (skip !== undefined) filter.skip = skip;
+    if (limit !== undefined) filter.limit = limit;
+
+    return filter;
 }
 
 export async function searchQRIDs(searchType: SearchType, searchQuery: string) {
@@ -81,8 +80,6 @@ export async function searchQRIDs(searchType: SearchType, searchQuery: string) {
         return { error: 'Vui lòng nhập từ khóa tìm kiếm' };
     }
 
-    // Just redirect to search page with query params
-    // The search page will fetch the data itself
     const searchParams = new URLSearchParams({
         q: searchQuery,
         type: searchType,
@@ -91,10 +88,39 @@ export async function searchQRIDs(searchType: SearchType, searchQuery: string) {
     redirect(`/search?${searchParams.toString()}`);
 }
 
-// Export the fetch function so search page can use it
-export async function fetchSearchResults(searchType: SearchType, searchQuery: string): Promise<SearchResult[]> {
-    const filter = buildFilter(searchType, searchQuery);
-    const baseUrl = 'https://api.qrcare.net/api/QRIDs'; // Fixed double slash
+/**
+ * Fetches only the count of search results to optimize performance.
+ * As requested, it only requests the 'id' field initially.
+ */
+export async function fetchSearchCount(searchType: SearchType, searchQuery: string): Promise<number> {
+    // Only fetch IDs to count
+    const filter = buildFilter(searchType, searchQuery, undefined, undefined, { id: true });
+    const baseUrl = 'https://api.qrcare.net/api/QRIDs';
+    const url = `${baseUrl}?filter=${encodeURIComponent(JSON.stringify(filter))}`;
+
+    const response = await fetch(url, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+    });
+
+    if (!response.ok) {
+        throw new Error(`Count failed: ${response.status}`);
+    }
+
+    const results = await response.json();
+    return Array.isArray(results) ? results.length : 0;
+}
+
+// Updated to support skip and limit
+export async function fetchSearchResults(
+    searchType: SearchType,
+    searchQuery: string,
+    skip: number = 0,
+    limit: number = 20
+): Promise<SearchResult[]> {
+    const filter = buildFilter(searchType, searchQuery, skip, limit);
+    const baseUrl = 'https://api.qrcare.net/api/QRIDs';
     const url = `${baseUrl}?filter=${encodeURIComponent(JSON.stringify(filter))}`;
 
     const response = await fetch(url, {
@@ -102,7 +128,7 @@ export async function fetchSearchResults(searchType: SearchType, searchQuery: st
         headers: {
             'Content-Type': 'application/json',
         },
-        cache: 'no-store', // Don't cache search results
+        cache: 'no-store',
     });
 
     if (!response.ok) {
