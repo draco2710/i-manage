@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { fetchSearchResults, fetchSearchCount } from '../actions/search';
@@ -16,7 +16,7 @@ interface SearchResult {
     packageId?: string;
 }
 
-export default function SearchPage() {
+function SearchContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const query = searchParams.get('q') || '';
@@ -326,5 +326,17 @@ export default function SearchPage() {
                 )}
             </main>
         </div>
+    );
+}
+
+export default function SearchPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen bg-background-light dark:bg-background-dark">
+                <span className="material-symbols-outlined animate-spin text-4xl text-primary">progress_activity</span>
+            </div>
+        }>
+            <SearchContent />
+        </Suspense>
     );
 }
