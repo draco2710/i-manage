@@ -35,6 +35,7 @@ func main() {
 
 	// Initialize Redis connection
 	database.InitRedis()
+	database.InitRediSearch()
 
 	// Configure Swagger host from environment variable
 	swaggerHost := os.Getenv("SWAGGER_HOST")
