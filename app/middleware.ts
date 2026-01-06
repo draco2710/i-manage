@@ -10,7 +10,8 @@ export function middleware(request: NextRequest) {
     // The matcher in config handles most cases.
 
     // If user has token and tries to access login, redirect to root
-    if (token && pathname === '/login') {
+    // UNLESS it's an expired session (sent from axios interceptor)
+    if (token && pathname === '/login' && !request.nextUrl.searchParams.has('expired')) {
         return NextResponse.redirect(new URL('/', request.url));
     }
 
