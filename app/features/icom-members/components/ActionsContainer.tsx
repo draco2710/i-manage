@@ -38,7 +38,7 @@ export default function ActionsContainer({ icomId }: ActionsContainerProps) {
 
     const handleSubmit = async (data: AddActionRequest) => {
         if (editingAction) {
-            updateAction.mutate({ actionId: editingAction.actionId, data }, {
+            updateAction.mutate({ actionId: editingAction.action_id, data }, {
                 onSuccess: () => setIsModalOpen(false)
             });
         } else {
@@ -87,7 +87,7 @@ export default function ActionsContainer({ icomId }: ActionsContainerProps) {
                         </div>
                     ) : (
                         actions.map((action) => (
-                            <div key={action.actionId} className="flex items-center justify-between rounded-xl bg-white p-5 shadow-icom-sm transition-all hover:shadow-icom-md border border-gray-50">
+                            <div key={action.action_id} className="flex items-center justify-between rounded-xl bg-white p-5 shadow-icom-sm transition-all hover:shadow-icom-md border border-gray-50">
                                 <div className="flex items-center">
                                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-icom-blue/10 text-icom-blue shadow-inner">
                                         <span className="material-symbols-outlined text-2xl shadow-sm">
@@ -111,7 +111,7 @@ export default function ActionsContainer({ icomId }: ActionsContainerProps) {
                                             <span className="material-symbols-outlined text-xl">edit</span>
                                         </button>
                                         <button
-                                            onClick={() => handleDeleteClick(action.actionId)}
+                                            onClick={() => handleDeleteClick(action.action_id)}
                                             className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
                                         >
                                             <span className="material-symbols-outlined text-xl">delete</span>

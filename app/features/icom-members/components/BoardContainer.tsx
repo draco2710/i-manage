@@ -38,7 +38,7 @@ export default function BoardContainer({ icomId }: BoardContainerProps) {
 
     const handleSubmit = async (data: AddBoardMemberRequest) => {
         if (editingMember) {
-            updateBoardMember.mutate({ memberId: editingMember.memberId, data }, {
+            updateBoardMember.mutate({ memberId: editingMember.member_id, data }, {
                 onSuccess: () => setIsModalOpen(false)
             });
         } else {
@@ -75,7 +75,7 @@ export default function BoardContainer({ icomId }: BoardContainerProps) {
                         </div>
                     ) : (
                         members.map((member) => (
-                            <div key={member.memberId} className="group relative overflow-hidden rounded-xl bg-white p-6 shadow-icom-sm transition-all hover:shadow-icom-md border border-gray-50">
+                            <div key={member.member_id} className="group relative overflow-hidden rounded-xl bg-white p-6 shadow-icom-sm transition-all hover:shadow-icom-md border border-gray-50">
                                 <div className="flex items-start justify-between">
                                     <div className="flex items-center">
                                         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-icom-teal/10 text-xl font-bold text-icom-teal shadow-inner">
@@ -98,7 +98,7 @@ export default function BoardContainer({ icomId }: BoardContainerProps) {
                                             <span className="material-symbols-outlined text-lg">edit</span>
                                         </button>
                                         <button
-                                            onClick={() => handleDeleteClick(member.memberId)}
+                                            onClick={() => handleDeleteClick(member.member_id)}
                                             className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
                                         >
                                             <span className="material-symbols-outlined text-lg">delete</span>
