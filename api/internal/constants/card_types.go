@@ -1,0 +1,33 @@
+package constants
+
+// Card Types
+const (
+	CARD_TYPE_ICOM  = "ICOM"
+	CARD_TYPE_ISHOP = "ISHOP"
+	CARD_TYPE_ICARD = "ICARD"
+	CARD_TYPE_IPET  = "IPET"
+	CARD_TYPE_IMEMBER = "IMEMBER"
+	CARD_TYPE_IDOC  = "IDOC"
+	CARD_TYPE_ISTAND = "ISTAND"
+)
+
+// Card Status
+const (
+	STATUS_ACTIVE    = "ACTIVE"
+	STATUS_GENERATED = "GENERATED"
+	STATUS_INACTIVE  = "INACTIVE"
+	STATUS_PENDING   = "PENDING"
+)
+
+// Member Status in iCom
+const (
+	MEMBER_STATUS_ACTIVE   = "ACTIVE"
+	MEMBER_STATUS_PENDING  = "PENDING"
+	MEMBER_STATUS_SUSPENDED = "SUSPENDED"
+)
+
+// Ranking Types
+const (
+	RANK_TYPE_INTERACTIONS = "interactions"
+	RANK_TYPE_LIKES        = "likes"
+)

@@ -2,6 +2,8 @@
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import apiClient from '@/lib/api/axios';
+import { AxiosError } from 'axios';
 
 export async function login(prevState: any, formData: FormData) {
     const username = formData.get('username') as string;
@@ -12,22 +14,8 @@ export async function login(prevState: any, formData: FormData) {
     }
 
     try {
-        const res = await fetch('https://i-manage-ru5z.onrender.com/api/v1/auth/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ username, password }),
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-            return { error: data.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.' };
-        }
-
-        // Assuming the API returns { token: "..." } or { data: { token: "..." } }
-        // Based on swagger AuthResponse: { token: string, user: string }
+        const response = await apiClient.post('/auth/login', { username, password });
+        const data = response.data;
         const token = data.token;
 
         if (!token) {
@@ -42,29 +30,20 @@ export async function login(prevState: any, formData: FormData) {
             path: '/',
         });
 
+        return { success: true };
     } catch (error) {
         console.error('Login error:', error);
+        if (error instanceof AxiosError && error.response) {
+            return { error: error.response.data.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.' };
+        }
         return { error: 'Có lỗi xảy ra khi kết nối đến máy chủ.' };
     }
-
-    // Redirect must be outside try-catch because it throws an error
-    redirect('/');
 }
 
 export async function checkEmailExist(email: string): Promise<{ exists: boolean }> {
     try {
-        const res = await fetch('https://i-manage-ru5z.onrender.com/api/v1/auth/check-email', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'accept': 'application/json',
-            },
-            body: JSON.stringify({ email }),
-        });
-
-        if (!res.ok) return { exists: false };
-        const data = await res.json();
-        return { exists: !!data.exists };
+        const response = await apiClient.post('/auth/check-email', { email });
+        return { exists: !!response.data.exists };
     } catch (error) {
         console.error('Check email error:', error);
         return { exists: false };
@@ -85,26 +64,15 @@ export async function register(prevState: any, formData: FormData) {
     }
 
     try {
-        const res = await fetch('https://i-manage-ru5z.onrender.com/api/v1/auth/register', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'accept': 'application/json',
-            },
-            body: JSON.stringify({
-                email,
-                password,
-                username: email // Use email as username as requested
-            }),
+        const response = await apiClient.post('/auth/register', {
+            email,
+            password,
+            username: email
         });
 
-        const data = await res.json();
-
-        if (!res.ok) {
-            return { error: data.message || 'Đăng ký thất bại. Vui lòng thử lại.' };
-        }
-
+        const data = response.data;
         const token = data.token;
+
         if (token) {
             const cookieStore = await cookies();
             cookieStore.set('token', token, {
@@ -113,13 +81,20 @@ export async function register(prevState: any, formData: FormData) {
                 maxAge: 60 * 60 * 24, // 1 day
                 path: '/',
             });
+            return { success: true };
         } else {
             return { error: 'Đăng ký thành công nhưng không nhận được token. Vui lòng đăng nhập.' };
         }
     } catch (error) {
         console.error('Registration error:', error);
+        if (error instanceof AxiosError && error.response) {
+            return { error: error.response.data.message || 'Đăng ký thất bại. Vui lòng thử lại.' };
+        }
         return { error: 'Có lỗi xảy ra khi kết nối đến máy chủ.' };
     }
-
-    redirect('/');
+}
+export async function logout() {
+    const cookieStore = await cookies();
+    cookieStore.delete('token');
+    redirect('/login');
 }

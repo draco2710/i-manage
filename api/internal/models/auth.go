@@ -25,5 +25,5 @@ type User struct {
 	Password string `json:"-" redis:"password"`
 	Name     string `json:"name" redis:"name"`
 	Status   string `json:"status" redis:"status"`
-	LastLogin string `json:"last_lg" redis:"last_lg"` 
+	LastLogin string `json:"last_login" redis:"last_lg"` 
 }
