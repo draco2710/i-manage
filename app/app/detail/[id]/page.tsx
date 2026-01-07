@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import QRCode from 'qrcode';
+import { logout } from '../../actions/logout';
 
 interface CardDetail {
     id: number;
@@ -18,6 +19,7 @@ interface CardDetail {
     endDate: string;
     ownerName: string;
     ownerPhoneNumber: string;
+    ownerAddress?: string;
     status: string;
     metadata: {
         vcard?: {
@@ -35,6 +37,7 @@ interface CardDetail {
 
 export default function CardDetailPage() {
     const params = useParams();
+    const router = useRouter();
     const id = params?.id as string;
 
     const [cardData, setCardData] = useState<CardDetail | null>(null);
@@ -242,13 +245,11 @@ export default function CardDetailPage() {
         }
     };
 
-    // Determine if we should show vCard info (mainly for iCard, maybe iMember/iDoc too? defaulting to just iCard for now as per previous logic)
-    // Actually, user only mentioned vCard info for "iCard (Danh thiếp cá nhân)".
-    const isICard = cardData?.cardType === 'CARD_TYPE.ICARD' || !cardData?.cardType; // Default to true if undefined or explicitly iCard
+    const isICard = cardData?.cardType === 'CARD_TYPE.ICARD' || !cardData?.cardType;
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-background-light">
+            <div className="flex items-center justify-center min-h-screen bg-background-light dark:bg-background-dark">
                 <span className="material-symbols-outlined animate-spin text-4xl text-primary">progress_activity</span>
             </div>
         );
@@ -256,7 +257,7 @@ export default function CardDetailPage() {
 
     if (error || !cardData) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-background-light p-4">
+            <div className="flex flex-col items-center justify-center min-h-screen bg-background-light dark:bg-background-dark p-4">
                 <p className="text-red-600 mb-4">{error || 'Không tìm thấy thông tin thẻ'}</p>
                 <Link href="/">
                     <button className="px-4 py-2 bg-primary text-white rounded-lg">Quay lại</button>
@@ -266,338 +267,283 @@ export default function CardDetailPage() {
     }
 
     return (
-        <div className="relative w-full max-w-md mx-auto h-screen bg-background-light flex flex-col overflow-hidden shadow-2xl">
+        <div className="relative w-full min-h-screen flex flex-col bg-background-light dark:bg-background-dark overflow-x-hidden antialiased">
             {/* Header */}
-            <div className="flex-none sticky top-0 z-50 flex items-center bg-white/80 backdrop-blur-md p-4 pt-6 pb-2 justify-between border-b border-border-subtle">
-                <Link href="/">
-                    <button className="text-text-main flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
-                        <span className="material-symbols-outlined text-2xl">arrow_back_ios_new</span>
+            <header className="sticky top-0 z-50 flex items-center justify-between bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md p-4 px-6 md:px-10 border-b border-gray-200/50 dark:border-white/5">
+                <div className="flex items-center gap-4 max-w-7xl mx-auto w-full">
+                    <button
+                        onClick={() => router.back()}
+                        className="text-text-main flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                    >
+                        <span className="material-symbols-outlined text-2xl">arrow_back</span>
                     </button>
-                </Link>
-                <h2 className="text-text-main text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">
-                    Chi tiết {getCardTypeName(cardData?.cardType)}
-                </h2>
-                <div className="flex w-10 items-center justify-end">
-                    {isEditMode ? (
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => {
-                                    setIsEditMode(false);
-                                    // Reset form data
-                                    if (cardData) {
-                                        setFormData({
-                                            ownerName: cardData.ownerName || '',
-                                            ownerAddress: cardData.ownerAddress || '',
-                                            ownerPhoneNumber: cardData.ownerPhoneNumber || '',
-                                            vcard: {
-                                                firstName: cardData.metadata?.vcard?.firstName || '',
-                                                lastName: cardData.metadata?.vcard?.lastName || '',
-                                                organization: cardData.metadata?.vcard?.organization || '',
-                                                email: cardData.metadata?.vcard?.email || '',
-                                                mobile: cardData.metadata?.vcard?.mobile || '',
-                                                homePhone: cardData.metadata?.vcard?.homePhone || '',
-                                                address: cardData.metadata?.vcard?.address || '',
-                                                title: cardData.metadata?.vcard?.title || '',
-                                            }
-                                        });
-                                    }
-                                }}
-                                className="text-red-500 flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-red-50 transition-colors"
-                            >
-                                <span className="material-symbols-outlined text-2xl">close</span>
-                            </button>
-                            <button
-                                onClick={handleSave}
-                                disabled={isSaving}
-                                className="text-green-600 flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-green-50 transition-colors disabled:opacity-50"
-                            >
-                                <span className="material-symbols-outlined text-2xl">
-                                    {isSaving ? 'progress_activity' : 'check'}
-                                </span>
-                            </button>
-                        </div>
-                    ) : (
-                        <button
-                            onClick={() => setIsEditMode(true)}
-                            className="text-text-main flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
-                        >
-                            <span className="material-symbols-outlined text-2xl">edit</span>
-                        </button>
-                    )}
-                </div>
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto no-scrollbar pb-28">
-                <div className="p-4">
-                    {/* Card Header */}
-                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-blue-600 shadow-xl p-6 mb-6 group transition-all hover:shadow-2xl hover:shadow-primary/20">
-                        <div className="absolute -right-12 -top-12 w-48 h-48 bg-white/20 rounded-full blur-3xl"></div>
-                        <div className="absolute -left-12 -bottom-12 w-40 h-40 bg-accent/40 rounded-full blur-3xl"></div>
-
-                        <div className="flex flex-col gap-8 relative z-10">
-                            <div className="flex justify-between items-start">
-                                <div className="flex flex-col gap-2 flex-1 pr-2">
-                                    <span className="bg-white/25 backdrop-blur-md text-white text-[10px] uppercase tracking-wider font-bold px-3 py-1 rounded-full w-fit border border-white/30 shadow-sm flex items-center gap-1">
-                                        <span className="size-1.5 bg-green-400 rounded-full animate-pulse"></span>
-                                        {cardData.status === 'QRID_STATUS.ACTIVE' ? 'Active' : 'Inactive'}
+                    <h2 className="text-text-main text-lg font-bold leading-tight flex-1 text-center truncate px-2">
+                        Chi tiết {getCardTypeName(cardData?.cardType)}
+                    </h2>
+                    <div className="flex items-center justify-end gap-1">
+                        {isEditMode ? (
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => {
+                                        setIsEditMode(false);
+                                        // Reset form data
+                                        if (cardData) {
+                                            setFormData({
+                                                ownerName: cardData.ownerName || '',
+                                                ownerAddress: cardData.ownerAddress || '',
+                                                ownerPhoneNumber: cardData.ownerPhoneNumber || '',
+                                                vcard: {
+                                                    firstName: cardData.metadata?.vcard?.firstName || '',
+                                                    lastName: cardData.metadata?.vcard?.lastName || '',
+                                                    organization: cardData.metadata?.vcard?.organization || '',
+                                                    email: cardData.metadata?.vcard?.email || '',
+                                                    mobile: cardData.metadata?.vcard?.mobile || '',
+                                                    homePhone: cardData.metadata?.vcard?.homePhone || '',
+                                                    address: cardData.metadata?.vcard?.address || '',
+                                                    title: cardData.metadata?.vcard?.title || '',
+                                                }
+                                            });
+                                        }
+                                    }}
+                                    className="text-red-500 flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                >
+                                    <span className="material-symbols-outlined text-2xl">close</span>
+                                </button>
+                                <button
+                                    onClick={handleSave}
+                                    disabled={isSaving}
+                                    className="text-green-600 flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors disabled:opacity-50"
+                                >
+                                    <span className="material-symbols-outlined text-2xl">
+                                        {isSaving ? 'progress_activity' : 'check'}
                                     </span>
-                                    <h3 className="text-white text-2xl font-bold leading-tight drop-shadow-sm mt-1">
-                                        {cardData.title || getCardTypeName(cardData.cardType)}
-                                    </h3>
-                                    <p className="text-sky-100 text-sm font-medium opacity-90">ID: {cardData.id}</p>
-                                </div>
-                                <div className="size-20 bg-white rounded-2xl p-1.5 shadow-lg shrink-0 transform transition-transform group-hover:scale-105">
-                                    {publicQR && <img alt="QR Code" className="w-full h-full object-contain" src={publicQR} />}
-                                </div>
+                                </button>
                             </div>
+                        ) : (
+                            <button
+                                onClick={() => setIsEditMode(true)}
+                                className="text-text-main flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                            >
+                                <span className="material-symbols-outlined text-2xl">edit</span>
+                            </button>
+                        )}
+                        {!isEditMode && (
+                            <button
+                                onClick={() => logout()}
+                                className="text-text-main flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 transition-colors"
+                                title="Đăng xuất"
+                            >
+                                <span className="material-symbols-outlined text-2xl">logout</span>
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </header>
 
-                            <div className="space-y-2">
+            {/* Content Area */}
+            <main className="flex-1 p-4 md:p-10 max-w-7xl mx-auto w-full">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                    {/* Left Column: Card Summary & QR */}
+                    <div className="space-y-6">
+                        {/* Card Visual Summary */}
+                        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-blue-600 shadow-xl p-8 group transition-all hover:shadow-2xl hover:shadow-primary/20">
+                            <div className="absolute -right-12 -top-12 w-48 h-48 bg-white/20 rounded-full blur-3xl"></div>
+                            <div className="absolute -left-12 -bottom-12 w-40 h-40 bg-accent/40 rounded-full blur-3xl"></div>
+
+                            <div className="flex flex-col gap-8 relative z-10 text-white">
+                                <div className="flex justify-between items-start gap-4">
+                                    <div className="flex flex-col gap-2 flex-1">
+                                        <span className="bg-white/25 backdrop-blur-md text-white text-[10px] uppercase tracking-wider font-bold px-3 py-1 rounded-full w-fit border border-white/30 shadow-sm flex items-center gap-1">
+                                            <span className="size-1.5 bg-green-400 rounded-full animate-pulse"></span>
+                                            {cardData.status === 'QRID_STATUS.ACTIVE' ? 'Active' : 'Inactive'}
+                                        </span>
+                                        <h3 className="text-3xl font-bold leading-tight drop-shadow-sm mt-1">
+                                            {cardData.title || getCardTypeName(cardData.cardType)}
+                                        </h3>
+                                        <p className="text-sky-100 text-sm font-medium opacity-90">ID: {cardData.id}</p>
+                                    </div>
+                                    <div className="size-24 bg-white rounded-2xl p-2 shadow-lg shrink-0 transform transition-transform group-hover:scale-105">
+                                        {publicQR && <img alt="QR Code" className="w-full h-full object-contain" src={publicQR} />}
+                                    </div>
+                                </div>
                                 <div className="text-xs text-sky-100 font-medium">
                                     <span>Kích hoạt: {new Date(cardData.activatedDate).toLocaleDateString('vi-VN')}</span>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-
-
-                    {/* QR Codes Section */}
-                    <div className="mb-8">
-                        <h3 className="text-text-main text-base font-bold mb-4 flex items-center gap-2 px-1">
-                            <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
-                                <span className="material-symbols-outlined text-[20px]">qr_code_scanner</span>
-                            </div>
-                            Mã QR & Đường dẫn
-                        </h3>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-primary/5 rounded-md p-2 border border-border-subtle flex flex-col items-center shadow-soft hover:shadow-lg transition-all duration-300 group overflow-hidden">
-                                <span className="text-primary text-[10px] font-bold mb-2 uppercase tracking-widest bg-primary/5 px-2 py-0.5">Public</span>
-                                {/* <div className="bg-white p-2 rounded-sm w-full mb-3 border border-gray-100 shadow-inner group-hover:scale-[1.02] transition-transform"> */}
-                                {publicQR && <img alt="Public QR Code" className="w-full h-auto object-contain" src={publicQR} />}
-                                {/* </div> */}
-                                <a
-                                    href={publicUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="w-full bg-primary/10 text-primary hover:bg-primary/5 active:bg-primary/10 transition-colors py-1 text-xs rounded-b-md font-bold flex items-center justify-center gap-1.5"
-                                >
-                                    <span className="material-symbols-outlined text-[8px]">qr_code_scanner</span>
-                                    <span>Quét QR</span>
-                                </a>
-                            </div>
-
-                            <div className="bg-accent/5 rounded-md p-2 border border-border-subtle flex flex-col items-center shadow-soft hover:shadow-lg transition-all duration-300 group">
-                                <span className="text-accent text-[10px] font-bold mb-2 uppercase tracking-widest bg-accent/10 px-2 py-0.5 rounded-full">Private</span>
-                                {/* <div className="bg-white p-2 rounded-xl w-full mb-3 border border-gray-100 shadow-inner group-hover:scale-[1.02] transition-transform"> */}
-                                {privateQR && <img alt="Private QR Code" className="w-full h-auto object-contain" src={privateQR} />}
-                                {/* </div> */}
-                                <a
-                                    href={privateUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="w-full bg-accent/10 text-accent hover:bg-accent/5 active:bg-accent/10 transition-colors py-1 rounded-md text-xs font-bold flex items-center justify-center gap-1.5"
-                                >
-                                    <span className="material-symbols-outlined text-[8px]">qr_code_scanner</span>
-                                    <span>Quét QR</span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* System Info */}
-                    <div className="mb-8">
-                        <h3 className="text-text-main text-base font-bold mb-4 flex items-center gap-2 px-1">
-                            <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
-                                <span className="material-symbols-outlined text-[20px]">dns</span>
-                            </div>
-                            Thông tin hệ thống
-                        </h3>
-                        <div className="bg-surface rounded-3xl overflow-hidden border border-border-subtle shadow-soft divide-y divide-gray-50">
-                            <div className="flex justify-between items-center p-4 hover:bg-background-light transition-colors group">
-                                <span className="text-text-secondary text-sm font-medium">Mã gói</span>
-                                <span className="bg-primary/10 text-primary text-xs font-bold px-2 py-1 rounded-md">{cardData.packageId}</span>
-                            </div>
-                            <div className="flex justify-between items-center p-4 hover:bg-background-light transition-colors group">
-                                <span className="text-text-secondary text-sm font-medium">Chủ sở hữu</span>
-                                {isEditMode ? (
-                                    <input
-                                        type="text"
-                                        value={formData.ownerName}
-                                        onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })}
-                                        className="text-text-main text-sm font-semibold border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary/50 text-right w-[60%]"
-                                    />
-                                ) : (
-                                    <span className="text-text-main text-sm font-semibold">{cardData.ownerName || 'N/A'}</span>
-                                )}
-                            </div>
-                            <div className="flex justify-between items-center p-4 hover:bg-background-light transition-colors group">
-                                <span className="text-text-secondary text-sm font-medium">SĐT đăng ký</span>
-                                {isEditMode ? (
-                                    <input
-                                        type="tel"
-                                        value={formData.ownerPhoneNumber}
-                                        onChange={(e) => setFormData({ ...formData, ownerPhoneNumber: e.target.value })}
-                                        className="text-text-main text-sm font-semibold border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary/50 text-right w-[60%]"
-                                    />
-                                ) : (
-                                    <span className="text-text-main text-sm font-semibold">{cardData.ownerPhoneNumber || 'N/A'}</span>
-                                )}
-                            </div>
-                            <div className="flex justify-between items-center p-4 hover:bg-background-light transition-colors group">
-                                <span className="text-text-secondary text-sm font-medium">Loại thẻ</span>
-                                <span className="text-text-main text-sm font-semibold">{getCardTypeName(cardData.cardType)}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* vCard Info (only for iCard) */}
-                {isICard && cardData.metadata?.vcard && (
-                    <div className="mb-6">
-                        <h3 className="text-text-main text-base font-bold mb-4 flex items-center gap-2 px-1">
-                            <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
-                                <span className="material-symbols-outlined text-[20px]">contact_page</span>
-                            </div>
-                            Thông tin vCard
-                        </h3>
-                        <div className="bg-surface rounded-3xl p-5 border border-border-subtle shadow-soft flex flex-col gap-6">
-                            <div className="flex items-center gap-5 border-b border-gray-100 pb-5">
-                                <div className="size-20 rounded-full bg-gradient-to-br from-primary to-blue-600 overflow-hidden shrink-0 border-[3px] border-white shadow-lg ring-2 ring-primary/20 flex items-center justify-center text-white font-bold text-2xl">
-                                    {(formData.vcard.firstName?.[0] || '') + (formData.vcard.lastName?.[0] || '')}
+                        {/* QR Codes Detail */}
+                        <div className="bg-white dark:bg-surface-dark rounded-3xl p-6 shadow-xl shadow-black/5 border border-gray-100 dark:border-white/5">
+                            <h3 className="text-lg font-bold text-text-main mb-6 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-primary">qr_code_2</span>
+                                Mã QR & Đường dẫn
+                            </h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div className="flex flex-col items-center gap-4 bg-gray-50 dark:bg-background-dark p-4 rounded-2xl border border-gray-100 dark:border-white/5 transition-all hover:shadow-lg">
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 py-1 bg-white dark:bg-surface-dark rounded-full border border-gray-100 dark:border-white/5">Public Link</span>
+                                    <div className="bg-white p-2 rounded-xl shadow-inner border border-gray-50 w-full max-w-[200px]">
+                                        {publicQR && <img alt="Public QR" className="w-full h-auto" src={publicQR} />}
+                                    </div>
+                                    <a
+                                        href={publicUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="w-full bg-primary text-white hover:brightness-110 active:scale-95 transition-all py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
+                                    >
+                                        <span className="material-symbols-outlined text-[18px]">open_in_new</span>
+                                        <span>Xem trang Public</span>
+                                    </a>
                                 </div>
-                                <div className="flex flex-col gap-1 flex-1 min-w-0">
+
+                                <div className="flex flex-col items-center gap-4 bg-gray-50 dark:bg-background-dark p-4 rounded-2xl border border-gray-100 dark:border-white/5 transition-all hover:shadow-lg">
+                                    <span className="text-[10px] font-bold text-accent uppercase tracking-widest px-3 py-1 bg-white dark:bg-surface-dark rounded-full border border-gray-100 dark:border-white/5">Private Link</span>
+                                    <div className="bg-white p-2 rounded-xl shadow-inner border border-gray-50 w-full max-w-[200px]">
+                                        {privateQR && <img alt="Private QR" className="w-full h-auto" src={privateQR} />}
+                                    </div>
+                                    <a
+                                        href={privateUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="w-full bg-accent text-white hover:brightness-110 active:scale-95 transition-all py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-accent/20"
+                                    >
+                                        <span className="material-symbols-outlined text-[18px]">manage_accounts</span>
+                                        <span>Xem trang Quản lý</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right Column: Information & Forms */}
+                    <div className="space-y-6">
+                        {/* System Information */}
+                        <div className="bg-white dark:bg-surface-dark rounded-3xl p-6 shadow-xl shadow-black/5 border border-gray-100 dark:border-white/5">
+                            <h3 className="text-lg font-bold text-text-main mb-6 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-primary">dns</span>
+                                Thông tin hệ thống
+                            </h3>
+                            <div className="grid grid-cols-1 divide-y divide-gray-100 dark:divide-white/5">
+                                <div className="py-4 flex justify-between items-center gap-4 transition-colors hover:bg-gray-50 dark:hover:bg-background-dark rounded-xl px-2">
+                                    <span className="text-text-secondary text-sm font-medium">Chủ sở hữu</span>
                                     {isEditMode ? (
-                                        <>
-                                            <div className="flex gap-2">
-                                                <input
-                                                    type="text"
-                                                    placeholder="Họ"
-                                                    value={formData.vcard.lastName}
-                                                    onChange={(e) => setFormData({ ...formData, vcard: { ...formData.vcard, lastName: e.target.value } })}
-                                                    className="flex-1 min-w-0 text-text-main font-bold text-lg border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary/50"
-                                                />
-                                                <input
-                                                    type="text"
-                                                    placeholder="Tên"
-                                                    value={formData.vcard.firstName}
-                                                    onChange={(e) => setFormData({ ...formData, vcard: { ...formData.vcard, firstName: e.target.value } })}
-                                                    className="flex-1 min-w-0 text-text-main font-bold text-lg border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary/50"
-                                                />
-                                            </div>
-                                            <input
-                                                type="text"
-                                                placeholder="Chức vụ"
-                                                value={formData.vcard.title}
-                                                onChange={(e) => setFormData({ ...formData, vcard: { ...formData.vcard, title: e.target.value } })}
-                                                className="w-full text-primary font-bold text-sm bg-primary/5 px-2 py-1 rounded-md border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/50"
-                                            />
-                                            <input
-                                                type="text"
-                                                placeholder="Công ty"
-                                                value={formData.vcard.organization}
-                                                onChange={(e) => setFormData({ ...formData, vcard: { ...formData.vcard, organization: e.target.value } })}
-                                                className="w-full text-text-secondary text-xs font-medium border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary/50"
-                                            />
-                                        </>
+                                        <input
+                                            type="text"
+                                            value={formData.ownerName}
+                                            onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })}
+                                            className="bg-gray-50 dark:bg-background-dark text-text-main text-sm font-bold border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/40 outline-none w-[60%]"
+                                        />
                                     ) : (
-                                        <>
-                                            <h4 className="text-text-main font-bold text-xl leading-tight truncate">
-                                                {`${formData.vcard.lastName || ''} ${formData.vcard.firstName || ''}`.trim() || cardData.ownerName}
-                                            </h4>
-                                            {formData.vcard.title && (
-                                                <p className="text-primary font-bold text-sm bg-primary/5 px-2 py-0.5 rounded-md w-fit max-w-full truncate">
-                                                    {formData.vcard.title}
-                                                </p>
-                                            )}
-                                            {formData.vcard.organization && (
-                                                <p className="text-text-secondary text-xs font-medium truncate">{formData.vcard.organization}</p>
-                                            )}
-                                        </>
+                                        <span className="text-text-main text-sm font-bold">{cardData.ownerName || 'Chưa cập nhật'}</span>
                                     )}
                                 </div>
+                                <div className="py-4 flex justify-between items-center gap-4 transition-colors hover:bg-gray-50 dark:hover:bg-background-dark rounded-xl px-2">
+                                    <span className="text-text-secondary text-sm font-medium">Số điện thoại</span>
+                                    {isEditMode ? (
+                                        <input
+                                            type="tel"
+                                            value={formData.ownerPhoneNumber}
+                                            onChange={(e) => setFormData({ ...formData, ownerPhoneNumber: e.target.value })}
+                                            className="bg-gray-50 dark:bg-background-dark text-text-main text-sm font-bold border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary/40 outline-none w-[60%]"
+                                        />
+                                    ) : (
+                                        <span className="text-text-main text-sm font-bold">{cardData.ownerPhoneNumber || 'Chưa cập nhật'}</span>
+                                    )}
+                                </div>
+                                <div className="py-4 flex justify-between items-center gap-4 transition-colors hover:bg-gray-50 dark:hover:bg-background-dark rounded-xl px-2">
+                                    <span className="text-text-secondary text-sm font-medium">Gói dịch vụ</span>
+                                    <span className="text-primary font-bold bg-primary/10 px-3 py-1 rounded-full text-xs">{cardData.packageId}</span>
+                                </div>
+                                <div className="py-4 flex justify-between items-center gap-4 transition-colors hover:bg-gray-50 dark:hover:bg-background-dark rounded-xl px-2">
+                                    <span className="text-text-secondary text-sm font-medium">Hạn dùng</span>
+                                    <span className="text-text-main text-sm font-bold italic">{new Date(cardData.endDate).toLocaleDateString('vi-VN')}</span>
+                                </div>
                             </div>
+                        </div>
 
-                            <div className="grid grid-cols-1 gap-5">
-                                {(isEditMode || formData.vcard.email) && (
-                                    <div className="flex items-start gap-4 group">
-                                        <div className="size-9 rounded-xl bg-background-light flex items-center justify-center shrink-0 text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
-                                            <span className="material-symbols-outlined text-[20px]">mail</span>
+                        {/* vCard Details if applicable */}
+                        {isICard && cardData.metadata?.vcard && (
+                            <div className="bg-white dark:bg-surface-dark rounded-3xl p-6 shadow-xl shadow-black/5 border border-gray-100 dark:border-white/5">
+                                <h3 className="text-lg font-bold text-text-main mb-6 flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-primary">contact_page</span>
+                                    Thông tin Danh thiếp
+                                </h3>
+
+                                <div className="space-y-6">
+                                    <div className="flex items-center gap-6 bg-primary/5 dark:bg-primary/10 p-5 rounded-2xl border border-primary/10">
+                                        <div className="size-20 rounded-2xl bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center text-white font-bold text-2xl shadow-lg border-2 border-white dark:border-slate-800 shrink-0">
+                                            {(formData.vcard.lastName?.[0] || 'Q') + (formData.vcard.firstName?.[0] || 'R')}
                                         </div>
-                                        <div className="flex flex-col flex-1 min-w-0">
-                                            <span className="text-text-secondary text-[11px] font-bold uppercase tracking-wide">Email</span>
+                                        <div className="flex-1 space-y-2">
                                             {isEditMode ? (
-                                                <input
-                                                    type="email"
-                                                    value={formData.vcard.email}
-                                                    onChange={(e) => setFormData({ ...formData, vcard: { ...formData.vcard, email: e.target.value } })}
-                                                    className="w-full text-text-main text-sm font-medium border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary/50"
-                                                />
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Họ"
+                                                        value={formData.vcard.lastName}
+                                                        onChange={(e) => setFormData({ ...formData, vcard: { ...formData.vcard, lastName: e.target.value } })}
+                                                        className="bg-white dark:bg-background-dark border border-gray-200 dark:border-white/10 rounded-lg px-2 py-1 text-sm outline-none"
+                                                    />
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Tên"
+                                                        value={formData.vcard.firstName}
+                                                        onChange={(e) => setFormData({ ...formData, vcard: { ...formData.vcard, firstName: e.target.value } })}
+                                                        className="bg-white dark:bg-background-dark border border-gray-200 dark:border-white/10 rounded-lg px-2 py-1 text-sm outline-none"
+                                                    />
+                                                </div>
                                             ) : (
-                                                <span className="text-text-main text-sm font-medium break-all">{formData.vcard.email}</span>
+                                                <h4 className="text-xl font-bold text-text-main">
+                                                    {formData.vcard.lastName} {formData.vcard.firstName}
+                                                </h4>
                                             )}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {(isEditMode || formData.vcard.mobile || formData.vcard.homePhone) && (
-                                    <div className="flex items-start gap-4 group">
-                                        <div className="size-9 rounded-xl bg-background-light flex items-center justify-center shrink-0 text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
-                                            <span className="material-symbols-outlined text-[20px]">call</span>
-                                        </div>
-                                        <div className="flex flex-col flex-1 min-w-0">
-                                            <span className="text-text-secondary text-[11px] font-bold uppercase tracking-wide">Điện thoại</span>
-                                            {isEditMode ? (
-                                                <input
-                                                    type="tel"
-                                                    value={formData.vcard.mobile || formData.vcard.homePhone}
-                                                    onChange={(e) => setFormData({ ...formData, vcard: { ...formData.vcard, mobile: e.target.value } })}
-                                                    className="w-full text-text-main text-sm font-medium border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary/50"
-                                                />
-                                            ) : (
-                                                <span className="text-text-main text-sm font-medium">
-                                                    {formData.vcard.mobile || formData.vcard.homePhone}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {(isEditMode || formData.vcard.address) && (
-                                    <div className="flex items-start gap-4 group">
-                                        <div className="size-9 rounded-xl bg-background-light flex items-center justify-center shrink-0 text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
-                                            <span className="material-symbols-outlined text-[20px]">location_on</span>
-                                        </div>
-                                        <div className="flex flex-col flex-1 min-w-0">
-                                            <span className="text-text-secondary text-[11px] font-bold uppercase tracking-wide">Địa chỉ</span>
                                             {isEditMode ? (
                                                 <input
                                                     type="text"
-                                                    value={formData.vcard.address}
-                                                    onChange={(e) => setFormData({ ...formData, vcard: { ...formData.vcard, address: e.target.value } })}
-                                                    className="w-full text-text-main text-sm font-medium border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                                    placeholder="Chức vụ"
+                                                    value={formData.vcard.title}
+                                                    onChange={(e) => setFormData({ ...formData, vcard: { ...formData.vcard, title: e.target.value } })}
+                                                    className="w-full bg-white dark:bg-background-dark border border-gray-200 dark:border-white/10 rounded-lg px-2 py-1 text-sm outline-none font-bold text-primary"
                                                 />
                                             ) : (
-                                                <span className="text-text-main text-sm font-medium">{formData.vcard.address}</span>
+                                                <p className="text-primary font-bold text-sm">{formData.vcard.title}</p>
                                             )}
                                         </div>
                                     </div>
-                                )}
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+                                        {[
+                                            { label: 'Công ty', value: formData.vcard.organization, key: 'organization', icon: 'business' },
+                                            { label: 'Email', value: formData.vcard.email, key: 'email', icon: 'mail' },
+                                            { label: 'Di động', value: formData.vcard.mobile, key: 'mobile', icon: 'smartphone' },
+                                            { label: 'Địa chỉ', value: formData.vcard.address, key: 'address', icon: 'location_on' }
+                                        ].map((item, idx) => (
+                                            <div key={idx} className="flex items-start gap-4 p-3 hover:bg-gray-50 dark:hover:bg-background-dark rounded-2xl transition-colors border border-transparent shadow-sm hover:border-gray-100 dark:hover:border-white/5 shadow-black/5">
+                                                <div className="size-10 rounded-xl bg-gray-100 dark:bg-surface-dark flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                                                    <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
+                                                </div>
+                                                <div className="flex flex-col flex-1 min-w-0">
+                                                    <span className="text-gray-400 text-[10px] font-bold uppercase tracking-widest leading-none mb-1">{item.label}</span>
+                                                    {isEditMode ? (
+                                                        <input
+                                                            value={item.value}
+                                                            onChange={(e) => setFormData({ ...formData, vcard: { ...formData.vcard, [item.key]: e.target.value } })}
+                                                            className="bg-transparent border-b border-gray-200 dark:border-white/10 pb-1 text-sm font-bold text-text-main outline-none focus:border-primary"
+                                                        />
+                                                    ) : (
+                                                        <span className="text-sm font-bold text-text-main truncate">{item.value || '---'}</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </div>
-                )}
-            </div>
-            {/* Floating Action Button */}
-            <div className="absolute bottom-6 left-0 right-0 px-4 flex justify-center pointer-events-none z-50">
-                <button className="pointer-events-auto shadow-glow bg-primary text-white font-bold h-14 rounded-full px-8 flex items-center gap-2 hover:scale-105 transition-all active:scale-95 border border-white/20 hover:bg-primary-dark">
-                    <span className="material-symbols-outlined">center_focus_weak</span>
-                    <span>Quét thẻ</span>
-                </button>
-            </div>
-        </div >
+                </div>
+            </main>
 
 
-
-    )
+        </div>
+    );
 }

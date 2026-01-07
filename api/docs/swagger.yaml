@@ -1,10 +1,133 @@
 basePath: /api/v1
 definitions:
+  models.ActionButton:
+    properties:
+      action_id:
+        type: string
+      icon:
+        type: string
+      order:
+        type: integer
+      title:
+        type: string
+      type:
+        type: string
+      url:
+        type: string
+    type: object
+  models.AddActionRequest:
+    properties:
+      icon:
+        type: string
+      order:
+        type: integer
+      title:
+        type: string
+      type:
+        type: string
+      url:
+        type: string
+    required:
+    - title
+    - type
+    - url
+    type: object
+  models.AddBoardMemberRequest:
+    properties:
+      avatar:
+        type: string
+      bio:
+        type: string
+      contact:
+        type: string
+      name:
+        type: string
+      role:
+        type: string
+      user_id:
+        type: string
+    required:
+    - name
+    - role
+    - user_id
+    type: object
+  models.AddMemberRequest:
+    properties:
+      banner:
+        type: string
+      description:
+        type: string
+      district:
+        type: string
+      email:
+        type: string
+      image_urls:
+        items:
+          type: string
+        type: array
+      industry:
+        description: Industry
+        type: string
+      lat:
+        description: Required for geo-search and map display
+        type: number
+      lng:
+        description: Required for geo-search and map display
+        type: number
+      logo:
+        type: string
+      name:
+        description: Shop Profile
+        type: string
+      phone:
+        description: Contact
+        type: string
+      province:
+        description: Address & Geo-location
+        type: string
+      rank:
+        description: Membership details
+        type: string
+      role:
+        type: string
+      status:
+        type: string
+      street:
+        type: string
+      sub_industry:
+        type: string
+      ward:
+        type: string
+      website:
+        type: string
+    required:
+    - industry
+    - lat
+    - lng
+    - name
+    type: object
   models.AuthResponse:
     properties:
       token:
         type: string
       user:
+        type: string
+    type: object
+  models.BoardMember:
+    properties:
+      avatar:
+        type: string
+      bio:
+        type: string
+      contact:
+        type: string
+      member_id:
+        type: string
+      name:
+        type: string
+      role:
+        type: string
+      user_id:
         type: string
     type: object
   models.CheckEmailRequest:
@@ -14,35 +137,409 @@ definitions:
     required:
     - email
     type: object
-  models.ICard:
+  models.CreateIComRequest:
     properties:
-      cardType:
+      address:
+        type: string
+      allowed_industries:
+        description: Array of industry slugs
+        items:
+          type: string
+        type: array
+      auto_activate:
+        type: boolean
+      banner:
+        type: string
+      description:
+        type: string
+      email:
+        type: string
+      full_name:
+        type: string
+      logo:
+        type: string
+      max_members:
+        type: integer
+      name:
+        type: string
+      operating_areas:
+        description: Array of area slugs
+        items:
+          type: string
+        type: array
+      phone:
+        type: string
+      require_approval:
+        type: boolean
+      slogan:
+        type: string
+      theme_color:
+        type: string
+      website:
+        type: string
+    required:
+    - name
+    type: object
+  models.CreateIShopRequest:
+    properties:
+      banner:
+        type: string
+      description:
+        type: string
+      district:
+        type: string
+      email:
+        type: string
+      image_urls:
+        items:
+          type: string
+        type: array
+      industry:
+        description: Industry
+        type: string
+      lat:
+        type: number
+      lng:
+        type: number
+      logo:
+        type: string
+      name:
+        type: string
+      phone:
+        description: Contact
+        type: string
+      province:
+        description: Address
+        type: string
+      street:
+        type: string
+      sub_industry:
+        type: string
+      ward:
+        type: string
+      website:
+        type: string
+    required:
+    - name
+    type: object
+  models.FilterMembersRequest:
+    properties:
+      district:
+        type: string
+      industry:
+        type: string
+      limit:
+        type: integer
+      page:
+        type: integer
+      province:
+        type: string
+      query:
+        type: string
+      rank:
+        type: string
+      status:
+        type: string
+      sub_industry:
+        type: string
+      ward:
+        type: string
+    type: object
+  models.GeoSearchRequest:
+    properties:
+      lat:
+        type: number
+      lng:
+        type: number
+      radius:
+        description: in kilometers
+        type: number
+      unit:
+        description: km or m
+        type: string
+    required:
+    - lat
+    - lng
+    - radius
+    type: object
+  models.IComListResponse:
+    properties:
+      icoms:
+        items:
+          $ref: '#/definitions/models.IComProfile'
+        type: array
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+    type: object
+  models.IComMetadataResponse:
+    properties:
+      areas:
+        items:
+          $ref: '#/definitions/models.MetadataItem'
+        type: array
+      industries:
+        items:
+          $ref: '#/definitions/models.MetadataItem'
+        type: array
+      sub_industries:
+        items:
+          $ref: '#/definitions/models.MetadataItem'
+        type: array
+    type: object
+  models.IComProfile:
+    properties:
+      active_members:
+        type: integer
+      address:
+        description: Contact fields
+        type: string
+      allowed_industries:
+        description: Configuration fields (stored as JSON strings in Redis)
+        type: string
+      auto_activate:
+        description: '"true" or "false"'
+        type: string
+      banner:
+        type: string
+      card_type:
+        type: string
+      created:
+        description: Audit fields
+        type: string
+      description:
+        type: string
+      email:
+        type: string
+      full_name:
         type: string
       id:
-        type: integer
-      ownerName:
+        description: System fields
         type: string
-      packageId:
-        description: API returns string
+      logo:
+        type: string
+      max_members:
+        type: integer
+      modified:
+        type: string
+      name:
+        description: Profile fields
+        type: string
+      operating_areas:
+        description: JSON array
+        type: string
+      package_id:
+        type: string
+      phone:
         type: string
       private:
-        description: API returns number or string
+        type: string
+      require_approval:
+        description: '"true" or "false"'
+        type: string
+      slogan:
+        type: string
+      status:
+        type: string
+      theme_color:
+        type: string
+      total_members:
+        description: Statistics
+        type: integer
+      website:
+        type: string
+    type: object
+  models.IComResponse:
+    properties:
+      actions:
+        items:
+          $ref: '#/definitions/models.ActionButton'
+        type: array
+      active_members:
+        type: integer
+      address:
+        description: Contact fields
+        type: string
+      allowed_industries:
+        description: Configuration fields (stored as JSON strings in Redis)
+        type: string
+      auto_activate:
+        description: '"true" or "false"'
+        type: string
+      banner:
+        type: string
+      board:
+        items:
+          $ref: '#/definitions/models.BoardMember'
+        type: array
+      card_type:
+        type: string
+      created:
+        description: Audit fields
+        type: string
+      description:
+        type: string
+      email:
+        type: string
+      full_name:
+        type: string
+      id:
+        description: System fields
+        type: string
+      logo:
+        type: string
+      max_members:
+        type: integer
+      modified:
+        type: string
+      name:
+        description: Profile fields
+        type: string
+      operating_areas:
+        description: JSON array
+        type: string
+      package_id:
+        type: string
+      phone:
+        type: string
+      private:
+        type: string
+      require_approval:
+        description: '"true" or "false"'
+        type: string
+      slogan:
+        type: string
+      status:
+        type: string
+      theme_color:
+        type: string
+      total_members:
+        description: Statistics
+        type: integer
+      website:
+        type: string
+    type: object
+  models.IComStatsResponse:
+    properties:
+      active_members:
+        type: integer
+      district_breakdown:
+        additionalProperties:
+          type: integer
+        type: object
+      industry_breakdown:
+        additionalProperties:
+          type: integer
+        type: object
+      pending_members:
+        type: integer
+      total_members:
+        type: integer
+    type: object
+  models.IShopMembershipInfo:
+    properties:
+      icom_id:
+        type: string
+      icom_logo:
+        type: string
+      icom_name:
+        type: string
+      joined_date:
+        type: string
+      rank:
+        type: string
+      role:
+        type: string
+      score:
+        description: Membership score/timestamp
+        type: number
       status:
         type: string
     type: object
-  models.IShop:
+  models.IShopProfile:
     properties:
+      banner:
+        type: string
+      card_type:
+        type: string
+      created:
+        description: Audit fields
+        type: string
+      description:
+        type: string
+      district:
+        type: string
+      email:
+        type: string
+      icoms:
+        description: RediSearch indexing
+        type: string
       id:
+        description: System fields
+        type: string
+      image_urls:
+        description: JSON array string
+        type: string
+      industry:
+        description: Industry fields
+        type: string
+      lat:
+        type: number
+      lng:
+        type: number
+      logo:
+        type: string
+      modified:
+        type: string
+      name:
+        description: Profile fields
+        type: string
+      package_id:
+        type: string
+      phone:
+        description: Contact fields
+        type: string
+      private:
+        type: string
+      province:
+        description: Address fields
+        type: string
+      status:
+        description: Configuration
+        type: string
+      street:
+        type: string
+      sub_industry:
+        type: string
+      ward:
+        type: string
+      website:
+        type: string
+    type: object
+  models.LeaderboardEntry:
+    properties:
+      logo:
+        type: string
+      name:
+        type: string
+      rank:
         type: integer
-      ishopId:
-        type: integer
-      ownerName:
-        description: |-
-          Name might not be in the Countids list, but we fetch it from QRIDs detail?
-          User doc says: GET /api/QRIDs/{id} returns ownerName.
-          The Countids list only has ishopId and id.
-          We might need a combined struct or just return what we have.
-          Let's add OwnerName for the detail view.
+      score:
+        type: number
+      shop_id:
+        type: string
+    type: object
+  models.LeaderboardResponse:
+    properties:
+      entries:
+        items:
+          $ref: '#/definitions/models.LeaderboardEntry'
+        type: array
+      type:
+        description: interactions or likes
         type: string
     type: object
   models.LoginRequest:
@@ -54,6 +551,74 @@ definitions:
     required:
     - password
     - username
+    type: object
+  models.MemberListResponse:
+    properties:
+      limit:
+        type: integer
+      members:
+        items:
+          $ref: '#/definitions/models.MemberSummary'
+        type: array
+      page:
+        type: integer
+      total:
+        type: integer
+    type: object
+  models.MemberSummary:
+    properties:
+      district:
+        type: string
+      industry:
+        type: string
+      joined_date:
+        type: string
+      lat:
+        type: number
+      lng:
+        type: number
+      logo:
+        type: string
+      name:
+        type: string
+      province:
+        type: string
+      rank:
+        type: string
+      shop_id:
+        type: string
+      status:
+        type: string
+      sub_industry:
+        type: string
+      ward:
+        type: string
+    type: object
+  models.MembershipDetail:
+    properties:
+      benefits:
+        type: string
+      icom_id:
+        type: string
+      icom_name:
+        type: string
+      joined_date:
+        type: string
+      rank:
+        type: string
+      role:
+        type: string
+      shop_id:
+        type: string
+      status:
+        type: string
+    type: object
+  models.MetadataItem:
+    properties:
+      count:
+        type: integer
+      name:
+        type: string
     type: object
   models.RegisterRequest:
     properties:
@@ -68,7 +633,141 @@ definitions:
     - password
     - username
     type: object
-host: localhost:8080
+  models.ToggleLikeRequest:
+    properties:
+      source:
+        enum:
+        - icom
+        - ishop
+        type: string
+      visitor_id:
+        type: string
+    required:
+    - source
+    - visitor_id
+    type: object
+  models.UpdateActionRequest:
+    properties:
+      icon:
+        type: string
+      order:
+        type: integer
+      title:
+        type: string
+      type:
+        type: string
+      url:
+        type: string
+    type: object
+  models.UpdateBoardMemberRequest:
+    properties:
+      avatar:
+        type: string
+      bio:
+        type: string
+      contact:
+        type: string
+      name:
+        type: string
+      role:
+        type: string
+    type: object
+  models.UpdateIComRequest:
+    properties:
+      address:
+        type: string
+      allowed_industries:
+        items:
+          type: string
+        type: array
+      auto_activate:
+        type: boolean
+      banner:
+        type: string
+      description:
+        type: string
+      email:
+        type: string
+      full_name:
+        type: string
+      logo:
+        type: string
+      max_members:
+        type: integer
+      name:
+        type: string
+      operating_areas:
+        items:
+          type: string
+        type: array
+      phone:
+        type: string
+      require_approval:
+        type: boolean
+      slogan:
+        type: string
+      theme_color:
+        type: string
+      website:
+        type: string
+    type: object
+  models.UpdateIShopRequest:
+    properties:
+      banner:
+        type: string
+      description:
+        type: string
+      district:
+        type: string
+      email:
+        type: string
+      image_urls:
+        items:
+          type: string
+        type: array
+      industry:
+        description: Industry
+        type: string
+      lat:
+        type: number
+      lng:
+        type: number
+      logo:
+        type: string
+      name:
+        type: string
+      phone:
+        description: Contact
+        type: string
+      province:
+        description: Address
+        type: string
+      street:
+        type: string
+      sub_industry:
+        type: string
+      ward:
+        type: string
+      website:
+        type: string
+    type: object
+  models.UpdateMemberOrderRequest:
+    properties:
+      display_order:
+        minimum: 1
+        type: integer
+    required:
+    - display_order
+    type: object
+  models.UpdateMemberStatusRequest:
+    properties:
+      rank:
+        type: string
+      role:
+        type: string
+      status:
+        type: string
+    type: object
 info:
   contact:
     email: support@swagger.io
@@ -186,28 +885,201 @@ paths:
       summary: User Registration
       tags:
       - auth
-  /debug/seed:
-    post:
-      description: This endpoint is deprecated as we now use external API
+  /icom:
+    get:
+      consumes:
+      - application/json
+      description: Get a paginated list of all iComs
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Items per page
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
         "200":
-          description: Success
+          description: OK
+          schema:
+            $ref: '#/definitions/models.IComListResponse'
+        "400":
+          description: Bad Request
           schema:
             additionalProperties:
               type: string
             type: object
-      summary: (Deprecated) Seed dummy data
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - CookieAuth: []
+      summary: List all iComs
       tags:
-      - debug
-  /search/icard:
-    get:
-      description: Find iCards ending with the provided suffix from api.qrcare.net
+      - icom-admin
+    post:
+      consumes:
+      - application/json
+      description: Create a new iCom (community card)
       parameters:
-      - description: Suffix (e.g. 4, 5, 6 digits)
-        in: query
-        name: suffix
+      - description: iCom creation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateIComRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.IComProfile'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - CookieAuth: []
+      summary: Create iCom
+      tags:
+      - icom
+  /icom/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete iCom and all related data
+      parameters:
+      - description: iCom ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - CookieAuth: []
+      summary: Delete iCom
+      tags:
+      - icom
+    get:
+      consumes:
+      - application/json
+      description: Get iCom details including board and actions
+      parameters:
+      - description: iCom ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.IComResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - CookieAuth: []
+      summary: Get iCom
+      tags:
+      - icom
+    put:
+      consumes:
+      - application/json
+      description: Update iCom profile information
+      parameters:
+      - description: iCom ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateIComRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - CookieAuth: []
+      summary: Update iCom
+      tags:
+      - icom
+  /icom/{id}/actions:
+    get:
+      consumes:
+      - application/json
+      description: Get all action buttons
+      parameters:
+      - description: iCom ID
+        in: path
+        name: id
         required: true
         type: string
       produces:
@@ -217,20 +1089,153 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/models.ICard'
+              $ref: '#/definitions/models.ActionButton'
             type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
       security:
       - CookieAuth: []
-      summary: Search iCard by Suffix
+      summary: List Action Buttons
       tags:
-      - search
-  /search/ishop:
-    get:
-      description: Find iShops ending with the provided suffix from api.qrcare.net
+      - icom-actions
+    post:
+      consumes:
+      - application/json
+      description: Add a functional action button
       parameters:
-      - description: Suffix (e.g. 4, 5, 6 digits)
-        in: query
-        name: suffix
+      - description: iCom ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Action details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.AddActionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - CookieAuth: []
+      summary: Add Action Button
+      tags:
+      - icom-actions
+  /icom/{id}/actions/{action_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an action button
+      parameters:
+      - description: iCom ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Action ID
+        in: path
+        name: action_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - CookieAuth: []
+      summary: Remove Action Button
+      tags:
+      - icom-actions
+    put:
+      consumes:
+      - application/json
+      description: Update action button information
+      parameters:
+      - description: iCom ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Action ID
+        in: path
+        name: action_id
+        required: true
+        type: string
+      - description: Update details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateActionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - CookieAuth: []
+      summary: Update Action Button
+      tags:
+      - icom-actions
+  /icom/{id}/board:
+    get:
+      consumes:
+      - application/json
+      description: Get all board members
+      parameters:
+      - description: iCom ID
+        in: path
+        name: id
         required: true
         type: string
       produces:
@@ -240,13 +1245,956 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/models.IShop'
+              $ref: '#/definitions/models.BoardMember'
             type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
       security:
       - CookieAuth: []
-      summary: Search iShop by Suffix
+      summary: List Board Members
       tags:
-      - search
+      - icom-board
+    post:
+      consumes:
+      - application/json
+      description: Add a member to the board of directors
+      parameters:
+      - description: iCom ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Board member details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.AddBoardMemberRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - CookieAuth: []
+      summary: Add Board Member
+      tags:
+      - icom-board
+  /icom/{id}/board/{member_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a member from the board
+      parameters:
+      - description: iCom ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Member ID
+        in: path
+        name: member_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - CookieAuth: []
+      summary: Remove Board Member
+      tags:
+      - icom-board
+    put:
+      consumes:
+      - application/json
+      description: Update board member information
+      parameters:
+      - description: iCom ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Member ID
+        in: path
+        name: member_id
+        required: true
+        type: string
+      - description: Update details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateBoardMemberRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - CookieAuth: []
+      summary: Update Board Member
+      tags:
+      - icom-board
+  /icom/{id}/geo-search:
+    post:
+      consumes:
+      - application/json
+      description: Find shops near a location
+      parameters:
+      - description: iCom ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Geo search parameters
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.GeoSearchRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.MemberSummary'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - CookieAuth: []
+      summary: Geo Search Members
+      tags:
+      - icom-members
+  /icom/{id}/interactions/{shop_id}:
+    post:
+      consumes:
+      - application/json
+      description: Increment interaction score for ranking
+      parameters:
+      - description: iCom ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Shop ID
+        in: path
+        name: shop_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - CookieAuth: []
+      summary: Increment Interactions
+      tags:
+      - icom-members
+  /icom/{id}/leaderboard:
+    get:
+      consumes:
+      - application/json
+      description: Get top shops by ranking type
+      parameters:
+      - description: iCom ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Ranking type (interactions or likes)
+        in: query
+        name: type
+        required: true
+        type: string
+      - default: 10
+        description: Number of results
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.LeaderboardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - CookieAuth: []
+      summary: Get Leaderboard
+      tags:
+      - icom-members
+  /icom/{id}/likes/{shop_id}:
+    post:
+      consumes:
+      - application/json
+      description: Toggle like status for a shop by a visitor (guest support)
+      parameters:
+      - description: iCom ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Shop ID
+        in: path
+        name: shop_id
+        required: true
+        type: string
+      - description: Like details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ToggleLikeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Toggle Like (Like/Unlike)
+      tags:
+      - icom-members
+  /icom/{id}/likes/{shop_id}/status:
+    get:
+      consumes:
+      - application/json
+      description: Check if a visitor has liked a shop
+      parameters:
+      - description: iCom ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Shop ID
+        in: path
+        name: shop_id
+        required: true
+        type: string
+      - description: Visitor ID
+        in: query
+        name: visitor_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Check Like Status
+      tags:
+      - icom-members
+  /icom/{id}/members:
+    get:
+      consumes:
+      - application/json
+      description: List all members with pagination
+      parameters:
+      - description: iCom ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MemberListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - CookieAuth: []
+      summary: List iCom Members
+      tags:
+      - icom-members
+    post:
+      consumes:
+      - application/json
+      description: Add a shop to iCom (creates new iShop in this iCom with location
+        details)
+      parameters:
+      - description: iCom ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Shop/Member details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.AddMemberRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - CookieAuth: []
+      summary: Add Member to iCom
+      tags:
+      - icom-members
+  /icom/{id}/members/{shop_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a shop from iCom membership
+      parameters:
+      - description: iCom ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Shop ID
+        in: path
+        name: shop_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - CookieAuth: []
+      summary: Remove Member from iCom
+      tags:
+      - icom-members
+    get:
+      consumes:
+      - application/json
+      description: Get detailed membership information
+      parameters:
+      - description: iCom ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Shop ID
+        in: path
+        name: shop_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MembershipDetail'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - CookieAuth: []
+      summary: Get Member Detail
+      tags:
+      - icom-members
+  /icom/{id}/members/{shop_id}/order:
+    put:
+      consumes:
+      - application/json
+      description: Set custom display order for a member (lower numbers appear first)
+      parameters:
+      - description: iCom ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Shop ID
+        in: path
+        name: shop_id
+        required: true
+        type: string
+      - description: Display order
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateMemberOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - CookieAuth: []
+      summary: Update Member Display Order
+      tags:
+      - icom-members
+  /icom/{id}/members/{shop_id}/status:
+    put:
+      consumes:
+      - application/json
+      description: Update member rank/status in iCom
+      parameters:
+      - description: iCom ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Shop ID
+        in: path
+        name: shop_id
+        required: true
+        type: string
+      - description: Status update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateMemberStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - CookieAuth: []
+      summary: Update Member Status
+      tags:
+      - icom-members
+  /icom/{id}/members/filter:
+    post:
+      consumes:
+      - application/json
+      description: Filter members by name (query), industry, location (province/district/ward),
+        status, rank
+      parameters:
+      - description: iCom ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Filter criteria
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.FilterMembersRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MemberListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - CookieAuth: []
+      summary: Filter iCom Members
+      tags:
+      - icom-members
+  /icom/{id}/metadata:
+    get:
+      consumes:
+      - application/json
+      description: Get unique industries and areas within an iCom for filter populating
+      parameters:
+      - description: iCom ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.IComMetadataResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get iCom Filter Metadata
+      tags:
+      - icom
+  /icom/{id}/search:
+    get:
+      consumes:
+      - application/json
+      description: Search members across all fields (name, industry, location) within
+        iCom scope
+      parameters:
+      - description: iCom ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Search query
+        in: query
+        name: q
+        required: true
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.MemberListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Global Search Members (RediSearch)
+      tags:
+      - icom-members
+  /icom/{id}/stats:
+    get:
+      consumes:
+      - application/json
+      description: Get statistics for an iCom
+      parameters:
+      - description: iCom ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.IComStatsResponse'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - CookieAuth: []
+      summary: Get iCom Statistics
+      tags:
+      - icom
+  /ishop:
+    post:
+      consumes:
+      - application/json
+      description: Create a new iShop (store card)
+      parameters:
+      - description: iShop creation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateIShopRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.IShopProfile'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - CookieAuth: []
+      summary: Create iShop
+      tags:
+      - ishop
+  /ishop/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete iShop and remove from all iComs
+      parameters:
+      - description: iShop ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - CookieAuth: []
+      summary: Delete iShop
+      tags:
+      - ishop
+    get:
+      consumes:
+      - application/json
+      description: Get iShop details
+      parameters:
+      - description: iShop ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.IShopProfile'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - CookieAuth: []
+      summary: Get iShop
+      tags:
+      - ishop
+    put:
+      consumes:
+      - application/json
+      description: Update iShop profile
+      parameters:
+      - description: iShop ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateIShopRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - CookieAuth: []
+      summary: Update iShop
+      tags:
+      - ishop
+  /ishop/{id}/memberships:
+    get:
+      consumes:
+      - application/json
+      description: List all iCom memberships for a shop
+      parameters:
+      - description: iShop ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.IShopMembershipInfo'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - CookieAuth: []
+      summary: List iShop Memberships
+      tags:
+      - ishop
 securityDefinitions:
   CookieAuth:
     in: cookie
