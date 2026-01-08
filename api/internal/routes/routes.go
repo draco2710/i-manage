@@ -20,7 +20,7 @@ func SetupRouter() *gin.Engine {
 
 	// CORS Configuration
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:3001"},
+		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:3001", "https://i-manage-ru5z.onrender.com"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "Cookie"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -90,6 +90,7 @@ func SetupRouter() *gin.Engine {
 			// Quản lý Members
 			icomAdmin.POST("/:id/members", handlers.AddMember)
 			icomAdmin.PUT("/:id/members/:shop_id/status", handlers.UpdateMemberStatus)
+			icomAdmin.PUT("/:id/members/order", handlers.UpdateMemberOrders)
 			icomAdmin.PUT("/:id/members/:shop_id/order", handlers.UpdateMemberOrder)
 			icomAdmin.DELETE("/:id/members/:shop_id", handlers.RemoveMember)
 
