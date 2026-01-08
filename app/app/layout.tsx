@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
+import { DesktopSidebar } from "@/components/layout/DesktopSidebar";
+import { BottomNavigation } from "@/components/layout/BottomNavigation";
+import Providers from "./providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,9 +36,17 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased bg-gray-50 dark:bg-slate-950`}
       >
-        {children}
+        <Providers>
+          <div className="flex min-h-screen flex-row">
+            <DesktopSidebar />
+            <div className="flex-1 max-w-full pb-20 md:pb-0"> {/* Added padding bottom for mobile nav */}
+              {children}
+            </div>
+          </div>
+          <BottomNavigation />
+        </Providers>
       </body>
     </html>
   );
