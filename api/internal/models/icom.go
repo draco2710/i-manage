@@ -202,6 +202,17 @@ type UpdateMemberOrderRequest struct {
 	DisplayOrder int `json:"display_order" binding:"required,min=1"`
 }
 
+// UpdateMemberOrderBatchRequest represents request to update multiple members order
+type UpdateMemberOrderBatchRequest struct {
+	Orders []MemberOrderItem `json:"orders" binding:"required,min=1"`
+}
+
+// MemberOrderItem represents a single item in bulk update
+type MemberOrderItem struct {
+	ShopID       string `json:"shop_id" binding:"required"`
+	DisplayOrder int    `json:"display_order" binding:"required,min=1"`
+}
+
 // FilterMembersRequest represents request to filter members
 type FilterMembersRequest struct {
 	Query       string `json:"query"`

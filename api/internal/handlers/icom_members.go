@@ -267,6 +267,37 @@ func UpdateMemberOrder(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Member display order updated successfully"})
 }
 
+// UpdateMemberOrders godoc
+// @Summary      Batch Update Member Orders
+// @Description  Update display order for multiple members at once
+// @Tags         icom-members
+// @Accept       json
+// @Produce      json
+// @Param        id path string true "iCom ID"
+// @Param        request body models.UpdateMemberOrderBatchRequest true "Orders list"
+// @Success      200  {object}  map[string]string
+// @Failure      400  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /icom/{id}/members/order [put]
+// @Security     CookieAuth
+func UpdateMemberOrders(c *gin.Context) {
+	icomID := c.Param("id")
+
+	var req models.UpdateMemberOrderBatchRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	service := services.NewMemberService()
+	if err := service.UpdateMemberOrders(c.Request.Context(), icomID, req.Orders); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Members order updated successfully"})
+}
+
 // IncrementInteractions godoc
 // @Summary      Increment Interactions
 // @Description  Increment interaction score for ranking

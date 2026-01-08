@@ -770,3 +770,14 @@ func (s *MemberService) updateMetadataAggregation(ctx context.Context, pipe redi
 		pipe.ZIncrBy(ctx, fmt.Sprintf("icom:%s:meta:areas", icomID), delta, district)
 	}
 }
+
+// UpdateMemberOrders updates display order for multiple members using pipeline
+func (s *MemberService) UpdateMemberOrders(ctx context.Context, icomID string, orders []models.MemberOrderItem) error {
+	pipe := s.rdb.Pipeline()
+	for _, order := range orders {
+		memberKey := fmt.Sprintf("icom:%s:member:%s", icomID, order.ShopID)
+		pipe.HSet(ctx, memberKey, "displayOrder", order.DisplayOrder)
+	}
+	_, err := pipe.Exec(ctx)
+	return err
+}
